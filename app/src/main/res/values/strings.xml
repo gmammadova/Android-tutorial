@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Gulchaman\'s Android Lab</string>
+    <string name="hello_message">Type your password:</string>
+    <string name="button_message">Login</string>
 </resources>
