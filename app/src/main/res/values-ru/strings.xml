@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Gulchaman\'s Android Lab</string>
-
-
-
-
-
-
-
-
     <string name="hello_message">Привет мир!</string>
     <string name="button_message">Я клавиша</string>
 </resources>
