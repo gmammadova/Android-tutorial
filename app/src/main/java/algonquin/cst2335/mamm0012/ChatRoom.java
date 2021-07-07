@@ -160,8 +160,17 @@ public class ChatRoom extends AppCompatActivity {
                             messages.remove(position);
                             adt.notifyItemRemoved(position);
 
+                            db.delete(MyOpenHelper.TABLE_NAME, "_id=?", new String[] {Long.toString(removedMessage.getId())});
+
                             Snackbar.make(messageText, "You deleted message #" + position, Snackbar.LENGTH_LONG)
                                     .setAction("Undo", clk -> {
+                                        ContentValues newRow = new ContentValues();
+                                        newRow.put(MyOpenHelper.col_message, removedMessage.getMessage());
+                                        newRow.put(MyOpenHelper.col_send_reveive, removedMessage.getSendOrReceive());
+                                        newRow.put(MyOpenHelper.col_time_sent, removedMessage.getTimeSent());
+                                        long newId = db.insert(MyOpenHelper.TABLE_NAME, MyOpenHelper.col_message, newRow);
+                                        removedMessage.setId(newId);
+
                                         messages.add(position, removedMessage);
                                         adt.notifyItemInserted(position);
                                     })
