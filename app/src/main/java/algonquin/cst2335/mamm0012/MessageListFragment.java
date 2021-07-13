@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Locale;
 
 public class MessageListFragment extends Fragment {
+    Button send;
     MyChatAdapter adt;
     ArrayList<ChatMessage> messages = new ArrayList<>();
     SQLiteDatabase db;
@@ -33,6 +34,7 @@ public class MessageListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View chatLayout = inflater.inflate(R.layout.chatlayout, container, false);
+        send = chatLayout.findViewById(R.id.sendButton);
 
         RecyclerView chatList = chatLayout.findViewById(R.id.myrecycler);
 
@@ -75,6 +77,7 @@ public class MessageListFragment extends Fragment {
             adt.notifyItemInserted(messages.size() - 1);
         });
 
+
         MyOpenHelper opener = new MyOpenHelper(getContext());
         db = opener.getWritableDatabase();
 
@@ -103,7 +106,29 @@ public class MessageListFragment extends Fragment {
         return chatLayout;
     }
 
-    private class ChatMessage {
+    public void notifyMessageDeleted(ChatMessage chosenMessage, int chosenPosition) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage("Do you want to delete the message:" + chosenMessage.getMessage())
+                .setTitle("Danger!")
+                .setNegativeButton("No", (dialog, cl) -> {})
+                .setPositiveButton("Yes", (dialog, cl) -> {
+                    // position = getAbsoluteAdapterPosition();
+                    ChatMessage removedMessage = messages.get(chosenPosition);
+                    messages.remove(chosenPosition);
+                    adt.notifyItemRemoved(chosenPosition);
+
+                    db.delete(MyOpenHelper.TABLE_NAME, "_id=?", new String[] {Long.toString(removedMessage.getId())});
+
+                    Snackbar.make(send, "You deleted message #" + chosenPosition, Snackbar.LENGTH_LONG)
+                            .setAction("Undo", clk -> {
+                                messages.add(chosenPosition, removedMessage);
+                                adt.notifyItemInserted(chosenPosition);
+                            }).show();
+        })
+        .create().show();
+    }
+
+    class ChatMessage {
         String message;
         int sendOrReceive;
         Date timeSent;
@@ -147,33 +172,10 @@ public class MessageListFragment extends Fragment {
             super(itemView);
 
             itemView.setOnClickListener(click -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setMessage("Do you want to delete the message:" + messageText.getText())
-                        .setTitle("Question:")
-                        .setNegativeButton("No", (dialog, cl) -> {})
-                        .setPositiveButton("Yes", (dialog, cl) -> {
-                            position = getAbsoluteAdapterPosition();
-                            ChatMessage removedMessage = messages.get(position);
-                            messages.remove(position);
-                            adt.notifyItemRemoved(position);
+                ChatRoom parentActivity = (ChatRoom)getContext();
+                int position = getAbsoluteAdapterPosition();
+                parentActivity.userClickedMesage(messages.get(position), position);
 
-                            db.delete(MyOpenHelper.TABLE_NAME, "_id=?", new String[] {Long.toString(removedMessage.getId())});
-
-                            Snackbar.make(messageText, "You deleted message #" + position, Snackbar.LENGTH_LONG)
-                                    .setAction("Undo", clk -> {
-                                        ContentValues newRow = new ContentValues();
-                                        newRow.put(MyOpenHelper.col_message, removedMessage.getMessage());
-                                        newRow.put(MyOpenHelper.col_send_reveive, removedMessage.getSendOrReceive());
-                                        newRow.put(MyOpenHelper.col_time_sent, removedMessage.getTimeSent());
-                                        long newId = db.insert(MyOpenHelper.TABLE_NAME, MyOpenHelper.col_message, newRow);
-                                        removedMessage.setId(newId);
-
-                                        messages.add(position, removedMessage);
-                                        adt.notifyItemInserted(position);
-                                    })
-                                    .show();
-                        })
-                        .create().show();
             });
 
             messageText = itemView.findViewById(R.id.message);
