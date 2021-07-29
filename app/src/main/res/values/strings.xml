@@ -2,4 +2,6 @@
     <string name="app_name">Gulchaman\'s Android Lab</string>
     <string name="hello_message">Hello world!</string>
     <string name="button_message">I\'m a button</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
 </resources>
